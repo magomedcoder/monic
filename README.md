@@ -1,13 +1,35 @@
-# Monic
+# Monic - лёгкая система мониторинга логов и событий
+
+Monic состоит из двух частей: **Agent** и **Server**
+
+### Архитектура
+
+- **Monic Agent** - маленький демон на каждом узле.
+  Подписывается на системные журналы, парсит события и отправляет их в серверную часть.
+  Может работать и в режиме вывода JSON в stdout.
+
+- **Monic Server** - центральный приёмник.
+  Принимает события по HTTP, проверяет подпись HMAC (если задан секрет) и сохраняет данные в ClickHouse.
+
+---
+
+## Статус
+
+- [x] Сбор событий из journald
+- [x] Отправка событий агентом по HTTP
+- [x] Приём событий сервером
+- [ ] Запись событий в ClickHouse
+- [ ] Отправка событий агентом по GRPC
+- [ ] Лёгкий веб-интерфейс с таблицей событий и фильтрами
+
+---
 
 ### Переменные окружения сервера
 
-- `MONIC_SERVER_ADDR` - адрес для HTTP-сервера, по умолчанию :8080
-- `MONIC_SERVER_SHARED_SECRET` - секрет для проверки HMAC-подписи (заголовок X-Signature)
-- `MONIC_SERVER_BATCH_SIZE` - размер батча перед вставкой, по умолчанию 500
-- `MONIC_SERVER_BATCH_WINDOW_MS` - окно времени (в миллисекундах) перед отправкой батча, по умолчанию 500
+- `MONIC_SERVER_ADDR` - адрес для HTTP-сервера, по умолчанию `:8080`
+- `MONIC_SERVER_SHARED_SECRET` - секрет для проверки HMAC-подписи (заголовок `X-Signature`)
 
-## Сборка
+### Сборка сервера
 
 ### Debian / Ubuntu
 
@@ -18,7 +40,7 @@ make build
 ### Запуск
 
 ```bash
-MONIC_SERVER_ADDR=:8000 MONIC_SERVER_CLICKHOUSE_DSN="tcp://127.0.0.1:9000?database=monic_db&username=default&password=default" MONIC_SERVER_SHARED_SECRET=secret ./build/monic-server
+MONIC_SERVER_ADDR=:8000 MONIC_SERVER_SHARED_SECRET=secret ./build/monic-server
 ```
 
 ---
@@ -27,11 +49,11 @@ MONIC_SERVER_ADDR=:8000 MONIC_SERVER_CLICKHOUSE_DSN="tcp://127.0.0.1:9000?databa
 
 - `MONIC_WEBHOOK_URL` - URL вебхука
 - `MONIC_SHARED_SECRET` - секрет для HMAC
-- `MONIC_JOURNAL_UNIT` - systemd unit для фильтрации, по умолчанию sshd.service. Если пусто - используется
-  SYSLOG_IDENTIFIER=sshd
-- `MONIC_STATE_DIR` - каталог для хранения курсора, по умолчанию /var/lib/monic-agent
+- `MONIC_JOURNAL_UNIT` - systemd unit для фильтрации, по умолчанию `sshd.service`.
+  Если пусто - используется `SYSLOG_IDENTIFIER=sshd`
+- `MONIC_STATE_DIR` - каталог для хранения курсора, по умолчанию `/var/lib/monic-agent`
 
-## Сборка
+## Сборка агента
 
 ### Debian / Ubuntu
 
