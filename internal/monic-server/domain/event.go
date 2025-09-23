@@ -13,3 +13,8 @@ type Event struct {
 	Message  string    `json:"message"`
 	Raw      string    `json:"raw"`
 }
+
+type IngestedEvent struct {
+	Event
+	ReceivedAt time.Time
+}
