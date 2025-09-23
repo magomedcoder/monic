@@ -1,8 +1,8 @@
 package parser
 
 import (
-	"github.com/magomedcoder/monic/internal/domain"
-	"github.com/magomedcoder/monic/internal/ports"
+	"github.com/magomedcoder/monic/internal/monic-agent/domain"
+	"github.com/magomedcoder/monic/internal/monic-agent/ports"
 	"regexp"
 	"strings"
 )

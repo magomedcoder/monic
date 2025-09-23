@@ -3,7 +3,7 @@ package journal
 import (
 	"errors"
 	"github.com/coreos/go-systemd/v22/sdjournal"
-	"github.com/magomedcoder/monic/internal/ports"
+	"github.com/magomedcoder/monic/internal/monic-agent/ports"
 	"time"
 )
 
@@ -37,11 +37,17 @@ func (s *systemdReader) Init() error {
 		if err := s.j.AddMatch("_SYSTEMD_UNIT=" + s.unit); err != nil {
 			return err
 		}
-	} else {
-		if err := s.j.AddMatch("SYSLOG_IDENTIFIER=sshd"); err != nil {
-			return err
-		}
+		_ = s.j.AddDisjunction()
 	}
+
+	if err := s.j.AddMatch("SYSLOG_IDENTIFIER=sshd"); err != nil {
+		return err
+	}
+
+	_ = s.j.AddDisjunction()
+	_ = s.j.AddMatch("_SYSTEMD_UNIT=sshd.service")
+	_ = s.j.AddDisjunction()
+	_ = s.j.AddMatch("_SYSTEMD_UNIT=ssh.service")
 
 	if cur, err := s.store.Load(); err == nil && cur != "" {
 		if err := s.j.SeekCursor(cur); err == nil {

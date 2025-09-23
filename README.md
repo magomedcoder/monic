@@ -5,7 +5,7 @@
 - `MONIC_WEBHOOK_URL` - URL вебхука
 - `MONIC_SHARED_SECRET` - секрет для HMAC
 - `MONIC_JOURNAL_UNIT` - systemd unit для фильтрации, по умолчанию sshd.service. Если пусто - используется SYSLOG_IDENTIFIER=sshd
-- `MONIC_STATE_DIR` - каталог для хранения курсора, по умолчанию /var/lib/monic
+- `MONIC_STATE_DIR` - каталог для хранения курсора, по умолчанию /var/lib/monic-agent
 
 ## Сборка
 
@@ -20,7 +20,7 @@ make build
 ### Запуск
 
 ```bash
-sudo MONIC_WEBHOOK_URL=http://127.0.0.1:8000/webhook MONIC_SHARED_SECRET=secret ./build/monic
+sudo MONIC_WEBHOOK_URL=http://127.0.0.1:8000/webhook MONIC_SHARED_SECRET=secret ./build/monic-agent
 ```
 
 ### Формат события

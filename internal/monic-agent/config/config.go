@@ -17,7 +17,7 @@ func Load() Config {
 		WebhookURL:       os.Getenv("MONIC_WEBHOOK_URL"),
 		SharedSecret:     os.Getenv("MONIC_SHARED_SECRET"),
 		JournalMatchUnit: pkg.GetEnv("MONIC_JOURNAL_UNIT", "sshd.service"),
-		StateDir:         pkg.GetEnv("MONIC_STATE_DIR", "/var/lib/monic"),
+		StateDir:         pkg.GetEnv("MONIC_STATE_DIR", "/var/lib/monic-agent"),
 	}
 	_ = os.MkdirAll(cfg.StateDir, 0o755)
 

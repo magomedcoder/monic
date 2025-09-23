@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/magomedcoder/monic/internal/config"
-	"github.com/magomedcoder/monic/internal/ports"
+	"github.com/magomedcoder/monic/internal/monic-agent/config"
+	ports2 "github.com/magomedcoder/monic/internal/monic-agent/ports"
 	"log"
 	"time"
 )
@@ -13,12 +13,12 @@ import (
 type App struct {
 	cfg     config.Config
 	host    string
-	jrnl    ports.JournalReader
-	parser  ports.EventParser
-	webhook ports.WebhookSender
+	jrnl    ports2.JournalReader
+	parser  ports2.EventParser
+	webhook ports2.WebhookSender
 }
 
-func New(cfg config.Config, host string, jrnl ports.JournalReader, parser ports.EventParser, webhook ports.WebhookSender) *App {
+func New(cfg config.Config, host string, jrnl ports2.JournalReader, parser ports2.EventParser, webhook ports2.WebhookSender) *App {
 	return &App{
 		cfg:     cfg,
 		host:    host,

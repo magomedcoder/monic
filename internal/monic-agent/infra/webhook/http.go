@@ -6,7 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"github.com/magomedcoder/monic/internal/ports"
+	"github.com/magomedcoder/monic/internal/monic-agent/ports"
 	"io"
 	"net/http"
 	"time"

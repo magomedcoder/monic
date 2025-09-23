@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/magomedcoder/monic/internal/app"
-	"github.com/magomedcoder/monic/internal/config"
-	"github.com/magomedcoder/monic/internal/infra/journal"
-	"github.com/magomedcoder/monic/internal/infra/parser"
-	"github.com/magomedcoder/monic/internal/infra/storage"
-	"github.com/magomedcoder/monic/internal/infra/webhook"
+	"github.com/magomedcoder/monic/internal/monic-agent/app"
+	"github.com/magomedcoder/monic/internal/monic-agent/config"
+	"github.com/magomedcoder/monic/internal/monic-agent/infra/journal"
+	"github.com/magomedcoder/monic/internal/monic-agent/infra/parser"
+	"github.com/magomedcoder/monic/internal/monic-agent/infra/storage"
+	"github.com/magomedcoder/monic/internal/monic-agent/infra/webhook"
 	"log"
 	"os"
 	"os/signal"
