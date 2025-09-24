@@ -15,12 +15,14 @@ import (
 type Server struct {
 	cfg      config.Config
 	verifier ports.Verifier
+	app      ports.Enqueuer
 }
 
-func NewServer(cfg config.Config, v ports.Verifier) *Server {
+func NewServer(cfg config.Config, v ports.Verifier, app ports.Enqueuer) *Server {
 	return &Server{
 		cfg:      cfg,
 		verifier: v,
+		app:      app,
 	}
 }
 
@@ -67,6 +69,11 @@ func (s *Server) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	var ev domain.Event
 	if err := json.Unmarshal(payload, &ev); err != nil {
 		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	if err := s.app.Enqueue(ev); err != nil {
+		http.Error(w, "queue full", http.StatusServiceUnavailable)
 		return
 	}
 

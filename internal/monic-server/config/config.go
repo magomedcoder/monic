@@ -8,6 +8,7 @@ import (
 type Config struct {
 	Addr          string
 	SharedSecret  string
+	ClickHouseDSN string
 	BatchSize     int
 	BatchWindowMs int
 }
@@ -16,6 +17,7 @@ func Load() Config {
 	cfg := Config{
 		Addr:          pkg.GetEnv("MONIC_SERVER_ADDR", ":8000"),
 		SharedSecret:  os.Getenv("MONIC_SERVER_SHARED_SECRET"),
+		ClickHouseDSN: pkg.GetEnv("MONIC_SERVER_CLICKHOUSE_DSN", "tcp://127.0.0.1:9000?database=monic_db"),
 		BatchSize:     pkg.MustInt(pkg.GetEnv("MONIC_SERVER_BATCH_SIZE", "500"), 500),
 		BatchWindowMs: pkg.MustInt(pkg.GetEnv("MONIC_SERVER_BATCH_WINDOW_MS", "500"), 500),
 	}

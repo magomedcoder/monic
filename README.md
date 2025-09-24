@@ -15,12 +15,12 @@ Monic состоит из двух частей: **Agent** и **Server**
 
 ## Статус
 
-- [x] Сбор событий из journald
+- [x] Сбор событий из journald (SSH: успешный вход, ошибка входа, невалидный пользователь, отключение)
 - [x] Отправка событий агентом по HTTP
 - [x] Приём событий сервером
-- [ ] Запись событий в ClickHouse
+- [x] Запись событий в ClickHouse
 - [ ] Отправка событий агентом по GRPC
-- [ ] Лёгкий веб-интерфейс с таблицей событий и фильтрами
+- [ ] Лёгкий веб-интерфейс (таблица событий и фильтры)
 
 ---
 
@@ -28,6 +28,10 @@ Monic состоит из двух частей: **Agent** и **Server**
 
 - `MONIC_SERVER_ADDR` - адрес для HTTP-сервера, по умолчанию `:8080`
 - `MONIC_SERVER_SHARED_SECRET` - секрет для проверки HMAC-подписи (заголовок `X-Signature`)
+- `MONIC_SERVER_CLICKHOUSE_DSN` - DSN для подключения к ClickHouse, по
+  умолчанию `tcp://127.0.0.1:9000?database=monic_db`
+- `MONIC_SERVER_BATCH_SIZE` - размер батча перед вставкой, по умолчанию `500`
+- `MONIC_SERVER_BATCH_WINDOW_MS` - окно времени (в миллисекундах) перед отправкой батча, по умолчанию `500`
 
 ### Сборка сервера
 
@@ -40,7 +44,10 @@ make build
 ### Запуск
 
 ```bash
-MONIC_SERVER_ADDR=:8000 MONIC_SERVER_SHARED_SECRET=secret ./build/monic-server
+MONIC_SERVER_ADDR=:8000 \
+MONIC_SERVER_CLICKHOUSE_DSN="tcp://127.0.0.1:9000?database=monic_db&username=default&password=default" \
+MONIC_SERVER_SHARED_SECRET=secret \
+./build/monic-server
 ```
 
 ---

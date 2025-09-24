@@ -1,7 +1,7 @@
 .PHONY: run-server
 run-server:
 	MONIC_SERVER_ADDR=:8000 \
-	#MONIC_SERVER_CLICKHOUSE_DSN="tcp://127.0.0.1:9000?database=monic_db&username=default&password=default" \
+	MONIC_SERVER_CLICKHOUSE_DSN="tcp://127.0.0.1:9000?database=monic_db&username=default&password=default" \
 	MONIC_SERVER_SHARED_SECRET=secret \
 	go run ./cmd/monic-server
 
