@@ -17,8 +17,8 @@ func NewCursorStore(stateDir string) *CursorStore {
 	}
 }
 
-func (s *CursorStore) Load() (string, error) {
-	b, err := os.ReadFile(s.path)
+func (c *CursorStore) Load() (string, error) {
+	b, err := os.ReadFile(c.path)
 	if err != nil {
 		return "", err
 	}
@@ -26,6 +26,6 @@ func (s *CursorStore) Load() (string, error) {
 	return strings.TrimSpace(string(b)), nil
 }
 
-func (s *CursorStore) Save(cur string) error {
-	return os.WriteFile(s.path, []byte(cur), 0o644)
+func (c *CursorStore) Save(cur string) error {
+	return os.WriteFile(c.path, []byte(cur), 0o644)
 }

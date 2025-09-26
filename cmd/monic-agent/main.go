@@ -4,10 +4,12 @@ import (
 	"context"
 	"github.com/magomedcoder/monic/internal/monic-agent/app"
 	"github.com/magomedcoder/monic/internal/monic-agent/config"
+	grpcSender "github.com/magomedcoder/monic/internal/monic-agent/infra/grpc"
+	httpInfra "github.com/magomedcoder/monic/internal/monic-agent/infra/http"
 	"github.com/magomedcoder/monic/internal/monic-agent/infra/journal"
 	"github.com/magomedcoder/monic/internal/monic-agent/infra/parser"
 	"github.com/magomedcoder/monic/internal/monic-agent/infra/storage"
-	"github.com/magomedcoder/monic/internal/monic-agent/infra/webhook"
+	"github.com/magomedcoder/monic/internal/monic-agent/ports"
 	"log"
 	"os"
 	"os/signal"
@@ -29,9 +31,20 @@ func main() {
 	defer jrnl.Close()
 
 	p := parser.NewSSHDRegexParser()
-	wh := webhook.NewHTTPSender(cfg.WebhookURL, cfg.SharedSecret)
 
-	application := app.New(cfg, host, jrnl, p, wh)
+	var senderIface ports.EventSender
+	if cfg.GRPCAddress != "" {
+		senderIface, err = grpcSender.NewGRPCSender(cfg.GRPCAddress, cfg.SharedSecret, cfg.GRPCInsecure)
+		if err != nil {
+			log.Fatalf("grpc sender: %v", err)
+		}
+		log.Printf("[Monic] gRPC -> %s (insecure=%v)", cfg.GRPCAddress, cfg.GRPCInsecure)
+	} else {
+		senderIface = httpInfra.NewHTTPSender(cfg.WebhookURL, cfg.SharedSecret)
+		log.Printf("[Monic] HTTP webhook -> %s", cfg.WebhookURL)
+	}
+
+	application := app.New(cfg, host, jrnl, p, senderIface)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()

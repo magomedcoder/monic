@@ -5,30 +5,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/magomedcoder/monic/internal/monic-agent/config"
-	ports2 "github.com/magomedcoder/monic/internal/monic-agent/ports"
+	"github.com/magomedcoder/monic/internal/monic-agent/ports"
 	"log"
 	"time"
 )
 
 type App struct {
-	cfg     config.Config
-	host    string
-	jrnl    ports2.JournalReader
-	parser  ports2.EventParser
-	webhook ports2.WebhookSender
+	cfg    config.Config
+	host   string
+	jrnl   ports.JournalReader
+	parser ports.EventParser
+	sender ports.EventSender
 }
 
-func New(cfg config.Config, host string, jrnl ports2.JournalReader, parser ports2.EventParser, webhook ports2.WebhookSender) *App {
+func New(cfg config.Config, host string, jrnl ports.JournalReader, parser ports.EventParser, sender ports.EventSender) *App {
 	return &App{
-		cfg:     cfg,
-		host:    host,
-		jrnl:    jrnl,
-		parser:  parser,
-		webhook: webhook,
+		cfg:    cfg,
+		host:   host,
+		jrnl:   jrnl,
+		parser: parser,
+		sender: sender,
 	}
 }
 
 func (a *App) Run(ctx context.Context) error {
+	defer a.sender.Close()
+
 	if err := a.jrnl.Init(); err != nil {
 		return err
 	}
@@ -61,16 +63,14 @@ func (a *App) Run(ctx context.Context) error {
 
 		if ev := a.parser.Parse(entry.Message); ev != nil {
 			ev.Server = a.host
-			ev.TS = entry.TS.UTC()
+			ev.DateTime = entry.DateTime.UTC()
 			ev.Raw = entry.Message
 
 			out, _ := json.Marshal(ev)
 			fmt.Println(string(out))
 
-			if a.cfg.WebhookURL != "" {
-				if err := a.webhook.Send(ctx, out); err != nil {
-					log.Printf("webhook error: %v", err)
-				}
+			if err := a.sender.Send(ctx, ev); err != nil {
+				log.Printf("send error: %v", err)
 			}
 		}
 

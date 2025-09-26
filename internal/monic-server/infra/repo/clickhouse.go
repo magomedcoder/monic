@@ -37,8 +37,8 @@ func NewClickHouse(ctx context.Context, cfg config.Config) (*ClickHouse, error) 
 
 func (c *ClickHouse) Ensure(ctx context.Context) error {
 	return c.conn.Exec(ctx, fmt.Sprintf(
-		`CREATE TABLE IF NOT EXISTS ssh_events(
-		ts DateTime64(3),
+		`CREATE TABLE IF NOT EXISTS events(
+		date_time DateTime64(3),
 		server String,
 		type LowCardinality(String),
 		user String,
@@ -49,18 +49,18 @@ func (c *ClickHouse) Ensure(ctx context.Context) error {
 		raw String,
 		received_at DateTime()
 	) ENGINE = MergeTree
-	ORDER BY (ts, server)
+	ORDER BY (date_time, server)
 	SETTINGS index_granularity = 8192;`))
 }
 
 func (c *ClickHouse) InsertBatch(ctx context.Context, batch []domain.IngestedEvent) error {
-	b, err := c.conn.PrepareBatch(ctx, "INSERT INTO ssh_events (ts, server, type, user, remote_ip, port, method, message, raw, received_at)")
+	b, err := c.conn.PrepareBatch(ctx, "INSERT INTO events (date_time, server, type, user, remote_ip, port, method, message, raw, received_at)")
 	if err != nil {
 		return err
 	}
 
 	for _, e := range batch {
-		if err := b.Append(e.TS, e.Server, e.Type, e.User, e.RemoteIP, app.ParsePort(e.Port), e.Method, e.Message, e.Raw, e.ReceivedAt); err != nil {
+		if err := b.Append(e.DateTime, e.Server, e.Type, e.User, e.RemoteIP, app.ParsePort(e.Port), e.Method, e.Message, e.Raw, e.ReceivedAt); err != nil {
 			return err
 		}
 	}

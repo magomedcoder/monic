@@ -81,17 +81,17 @@ func (s *systemdReader) Next() (*ports.JournalEntry, error) {
 	msg := e.Fields["MESSAGE"]
 	if msg == "" {
 		return &ports.JournalEntry{
-			Message: "",
-			TS:      time.Time{},
-			Cursor:  "",
+			Message:  "",
+			DateTime: time.Time{},
+			Cursor:   "",
 		}, nil
 	}
 
 	cursor, _ := s.j.GetCursor()
 	return &ports.JournalEntry{
-		Message: msg,
-		TS:      time.Unix(int64(e.RealtimeTimestamp/1e6), int64((e.RealtimeTimestamp%1e6)*1e3)),
-		Cursor:  cursor,
+		Message:  msg,
+		DateTime: time.Unix(int64(e.RealtimeTimestamp/1e6), int64((e.RealtimeTimestamp%1e6)*1e3)),
+		Cursor:   cursor,
 	}, nil
 }
 

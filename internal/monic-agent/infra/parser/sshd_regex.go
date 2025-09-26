@@ -21,7 +21,7 @@ var (
 	reConnClosed   = regexp.MustCompile(`^Connection\s+closed\s+by\s+(\S+)\s+port\s+(\d+)`)
 )
 
-func (p *sshdRegexParser) Parse(msg string) *domain.Event {
+func (s *sshdRegexParser) Parse(msg string) *domain.Event {
 	msg = strings.TrimSpace(msg)
 	if m := reAccepted.FindStringSubmatch(msg); m != nil {
 		return &domain.Event{

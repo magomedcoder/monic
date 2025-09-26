@@ -1,11 +1,13 @@
-package webhook
+package http
 
 import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"github.com/magomedcoder/monic/internal/monic-agent/domain"
 	"github.com/magomedcoder/monic/internal/monic-agent/ports"
 	"io"
 	"net/http"
@@ -18,7 +20,7 @@ type httpSender struct {
 	client *http.Client
 }
 
-func NewHTTPSender(url, secret string) ports.WebhookSender {
+func NewHTTPSender(url, secret string) ports.EventSender {
 	return &httpSender{
 		url:    url,
 		secret: secret,
@@ -27,21 +29,27 @@ func NewHTTPSender(url, secret string) ports.WebhookSender {
 		},
 	}
 }
-func (h *httpSender) Send(ctx context.Context, payload []byte) error {
+
+func (h *httpSender) Send(ctx context.Context, ev *domain.Event) error {
 	if h.url == "" {
 		return nil
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, h.url, bytesReader(payload))
+	payload, err := json.Marshal(ev)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, h.url+"/webhook", bytesReader(payload))
 	if err != nil {
 		return err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	if h.secret != "" {
-		h := hmac.New(sha256.New, []byte(h.secret))
-		_, _ = h.Write(payload)
-		sig := hex.EncodeToString(h.Sum(nil))
+		m := hmac.New(sha256.New, []byte(h.secret))
+		_, _ = m.Write(payload)
+		sig := hex.EncodeToString(m.Sum(nil))
 		req.Header.Set("X-Signature", "sha256="+sig)
 	}
 
@@ -49,13 +57,17 @@ func (h *httpSender) Send(ctx context.Context, payload []byte) error {
 	if err != nil {
 		return err
 	}
-
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
-		return errors.New(resp.Status)
+		b, _ := io.ReadAll(resp.Body)
+		return errors.New(resp.Status + ": " + string(b))
 	}
 
+	return nil
+}
+
+func (h *httpSender) Close() error {
 	return nil
 }
 

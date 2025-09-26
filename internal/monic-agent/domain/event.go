@@ -3,7 +3,7 @@ package domain
 import "time"
 
 type Event struct {
-	TS       time.Time `json:"ts"`
+	DateTime time.Time `json:"dateTime"`
 	Server   string    `json:"server"`
 	Type     string    `json:"type"`
 	User     string    `json:"user"`

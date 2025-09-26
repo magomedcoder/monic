@@ -3,9 +3,9 @@ package ports
 import "time"
 
 type JournalEntry struct {
-	Message string
-	TS      time.Time
-	Cursor  string
+	Message  string
+	DateTime time.Time
+	Cursor   string
 }
 
 type JournalReader interface {

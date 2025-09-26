@@ -1,0 +1,39 @@
+[Unit]
+Description=Monic server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/local/bin/monic-server
+
+# HTTP-сервер
+Environment=MONIC_SERVER_HTTP_ADDR=:8000
+
+# gRPC-сервер
+#Environment=MONIC_SERVER_GRPC_ADDR=:50051
+
+# Общий секрет: используется для проверки HMAC (HTTP) и как Bearer-токен (gRPC)
+Environment=MONIC_SERVER_SHARED_SECRET=change_me
+
+# gRPC TLS (опционально)
+#Environment=MONIC_SERVER_TLS_CERT=/etc/monic-server/cert.pem
+#Environment=MONIC_SERVER_TLS_KEY=/etc/monic-server/key.pem
+
+# ClickHouse
+Environment=MONIC_SERVER_CLICKHOUSE_DSN=tcp://127.0.0.1:9000?database=monic_db
+
+# Опционально: можно вынести все переменные в /etc/default/monic-server (формат KEY=VALUE)
+#EnvironmentFile=-/etc/default/monic-server
+
+Restart=on-failure
+RestartSec=3s
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

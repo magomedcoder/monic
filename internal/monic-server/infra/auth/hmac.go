@@ -13,7 +13,9 @@ type HMACVerifier struct {
 }
 
 func NewHMACVerifier(secret string) *HMACVerifier {
-	return &HMACVerifier{secret: secret}
+	return &HMACVerifier{
+		secret: secret,
+	}
 }
 
 func (v *HMACVerifier) Verify(header string, body []byte) error {

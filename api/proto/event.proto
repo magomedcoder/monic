@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package event;
+
+option go_package = "github.com/magomedcoder/monic/api/pb";
+
+import "google/protobuf/timestamp.proto";
+
+service EventsService {
+  rpc Ingest(IngestRequest) returns (IngestResponse);
+}
+
+message Event {
+  google.protobuf.Timestamp date_time = 1;
+  string server = 2;
+  string type = 3;
+  string user = 4;
+  string remote_ip = 5;
+  string port = 6;
+  string method = 7;
+  string message = 8;
+  string raw = 9;
+}
+
+message IngestRequest {
+  Event event = 1;
+}
+
+message IngestResponse {}
