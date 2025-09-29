@@ -49,6 +49,11 @@ func (s *systemdReader) Init() error {
 	_ = s.j.AddDisjunction()
 	_ = s.j.AddMatch("_SYSTEMD_UNIT=ssh.service")
 
+	_ = s.j.AddDisjunction()
+	if err := s.j.AddMatch("SYSLOG_IDENTIFIER=kernel"); err != nil {
+		return err
+	}
+
 	if cur, err := s.store.Load(); err == nil && cur != "" {
 		if err := s.j.SeekCursor(cur); err == nil {
 			_, _ = s.j.Next()

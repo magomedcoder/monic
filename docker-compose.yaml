@@ -32,6 +32,6 @@ services:
     #   - ./certs/key.pem:/etc/monic/key.pem:ro
     ports:
       - 8000:8000
-      - 50051:8000
+      - 50051:50051
     depends_on:
       - clickhouse

@@ -5,6 +5,7 @@ go 1.24.5
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.40.3
 	github.com/coreos/go-systemd/v22 v22.6.0
+	github.com/google/gopacket v1.1.19
 	google.golang.org/grpc v1.75.1
 	google.golang.org/protobuf v1.36.6
 )

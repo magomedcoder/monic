@@ -30,8 +30,6 @@ func main() {
 	}
 	defer jrnl.Close()
 
-	p := parser.NewSSHDRegexParser()
-
 	var senderIface ports.EventSender
 	if cfg.GRPCAddress != "" {
 		senderIface, err = grpcSender.NewGRPCSender(cfg.GRPCAddress, cfg.SharedSecret, cfg.GRPCInsecure)
@@ -43,6 +41,11 @@ func main() {
 		senderIface = httpInfra.NewHTTPSender(cfg.WebhookURL, cfg.SharedSecret)
 		log.Printf("[Monic] HTTP webhook -> %s", cfg.WebhookURL)
 	}
+
+	p := parser.NewChain(
+		parser.NewSSHDRegexParser(),
+		parser.NewNetfilterRegexParser(),
+	)
 
 	application := app.New(cfg, host, jrnl, p, senderIface)
 

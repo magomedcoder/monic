@@ -7,7 +7,6 @@ Monic состоит из двух частей: **Agent** и **Server**
   Поддерживаемые транспорты отправки:
     - HTTP
     - gRPC
-    - режим отладки: вывод JSON в stdout
 
 - **Monic Server** - центральный приёмник.  
   Принимает события по **HTTP** или **gRPC**, проверяет подпись/токен (если задан секрет) и сохраняет данные в
@@ -16,16 +15,16 @@ Monic состоит из двух частей: **Agent** и **Server**
 
 ---
 
-## Статус
+### Статус
 
 - [x] Сбор событий из journald (SSH: успешный вход, ошибка входа, невалидный пользователь, отключение)
 - [x] Отправка событий агентом по HTTP
 - [x] Приём событий сервером
 - [x] Запись событий в ClickHouse
 - [x] Отправка событий агентом по gRPC
-- [ ] Детекция порт-скана:
-    - [ ] через firewall/journal
-    - [ ] через пассивный сниффинг
+- [x] Детекция порт-скана:
+    - [x] через firewall/journal
+    - [x] через пассивный сниффинг
 - [ ] Лёгкий веб-интерфейс (таблица событий и фильтры)
 
 ---
@@ -102,14 +101,24 @@ monic-server
     - `MONIC_GRPC_ADDR` - адрес gRPC-сервера (например, `127.0.0.1:50051`)
     - `MONIC_GRPC_INSECURE` - `true` для нешифрованного gRPC, по умолчанию `false`
 
-**Общие параметры:**
+- **Общие параметры:**
+    - `MONIC_SHARED_SECRET` - общий секрет:
+        - в HTTP режиме используется для HMAC (`X-Signature`)
+        - в gRPC режиме используется как Bearer-токен (`authorization: Bearer <secret>`)
 
-- `MONIC_SHARED_SECRET` - общий секрет:
-    - в HTTP режиме используется для HMAC (`X-Signature`)
-    - в gRPC режиме используется как Bearer-токен (`authorization: Bearer <secret>`)
+    - `MONIC_JOURNAL_UNIT` - systemd unit для фильтрации, по умолчанию `sshd.service`.  
+      Если пусто - используется `SYSLOG_IDENTIFIER=sshd`.
 
-- `MONIC_JOURNAL_UNIT` - systemd unit для фильтрации, по умолчанию `sshd.service`.  
-  Если пусто - используется `SYSLOG_IDENTIFIER=sshd`.
+        - `MONIC_ENABLE_PORTSCAN` - включить детектор/сниффинг, по умолчанию `false`
+            - **Детектор порт-скана**
+                - `MONIC_PORTSCAN_WINDOW_SECONDS` - окно T секунд (по умолчанию `10`)
+                - `MONIC_PORTSCAN_DISTINCT_PORTS` - порог N разных портов (по умолчанию `12`)
+
+            - **Сниффинг**
+                - `MONIC_SNIFFER_IFACES` - запятая-разделённый список интерфейсов: `ens160,ens192`
+                - `MONIC_SNIFFER_PROMISC` - `true` для promiscuous, по умолчанию `false`
+                - `MONIC_SNIFFER_BPF` - кастомный BPF-фильтр.
+                  По умолчанию: `(tcp[tcpflags] & (tcp-syn) != 0 and (tcp[tcpflags] & tcp-ack) = 0) or udp`
 
 ### Запуск (HTTP)
 
@@ -139,6 +148,51 @@ monic-agent
 
 ---
 
+### Включение детектора порт-скана
+
+#### Вариант А: через firewall/journal (nftables/iptables -> kernel-logs)
+
+- Добавьте правила логирования входящих TCP SYN/UDP на «неразрешённые» порты.
+- Агент уже слушает kernel-журнал и парсит строки вида ... PROTO=TCP ... SRC=1.2.3.4 ... DPT=3389 ....
+
+#### iptables
+
+```bash
+iptables -N MONIC-AGENT
+iptables -A INPUT -p tcp --syn -j MONIC-AGENT
+iptables -A MONIC-AGENT -m multiport ! --dports 22,80,443 -j LOG --log-prefix "PORTSCAN "
+iptables -A MONIC-AGENT -m multiport ! --dports 22,80,443 -j REJECT
+```
+
+#### nftables
+
+```bash
+nft add table inet monic-agent
+nft 'add chain inet monic-agent input { type filter hook input priority 0; }'
+nft add rule inet monic-agent input ct state established,related accept
+nft add rule inet monic-agent input iif lo accept
+nft add rule inet monic-agent input tcp dport { 22,80,443 } accept
+nft add rule inet monic-agent input tcp flags syn log prefix "PORTSCAN "
+nft add rule inet monic-agent input tcp flags syn reject
+```
+
+```bash
+sudo MONIC_ENABLE_PORTSCAN=true monic-agent
+```
+
+#### Вариант Б: через сниффинг трафика
+
+```bash
+sudo MONIC_SNIFFER_IFACES=ens160,ens192 \
+  MONIC_ENABLE_PORTSCAN=true \
+  MONIC_SNIFFER_PROMISC=true \
+  monic-agent
+```
+
+Агент будет генерировать «сырые» net_probe и агрегированные port_scan.
+
+---
+
 ### Сборка
 
 - **go** 1.24
@@ -152,7 +206,7 @@ monic-agent
 > - **protoc-gen-go-grpc** 1.5
 
 ```bash
-sudo apt install libsystemd-dev pkg-config make
+sudo apt install pkg-config libsystemd-dev libpcap-dev make
 
 pkg-config --cflags --libs libsystemd
 ```

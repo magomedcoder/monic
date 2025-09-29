@@ -1,7 +1,7 @@
 FROM golang:1.24.7-bookworm AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential pkg-config ca-certificates make \
-    libsystemd-dev \
+    libsystemd-dev libpcap-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/monic
