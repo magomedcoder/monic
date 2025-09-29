@@ -9,7 +9,7 @@ import (
 type Config struct {
 	DebugMode             bool
 	WebhookURL            string
-	SharedSecret          string
+	Secret                string
 	GRPCAddress           string
 	GRPCInsecure          bool
 	JournalMatchUnit      string
@@ -26,7 +26,7 @@ func Load() Config {
 	cfg := Config{
 		DebugMode:             pkg.GetEnv("MONIC_DEBUG", "false") == "true",
 		WebhookURL:            os.Getenv("MONIC_HTTP_URL"),
-		SharedSecret:          os.Getenv("MONIC_SHARED_SECRET"),
+		Secret:                os.Getenv("MONIC_SECRET"),
 		GRPCAddress:           os.Getenv("MONIC_GRPC_ADDR"),
 		GRPCInsecure:          pkg.GetEnv("MONIC_GRPC_INSECURE", "false") == "true",
 		JournalMatchUnit:      pkg.GetEnv("MONIC_JOURNAL_UNIT", "sshd.service"),

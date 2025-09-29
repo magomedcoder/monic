@@ -56,8 +56,8 @@ func (s *Server) Start(ctx context.Context) error {
 
 	gs := grpc.NewServer(opts...)
 	pb.RegisterEventsServiceServer(gs, &ingestSvc{
-		app:          s.app,
-		sharedSecret: s.cfg.SharedSecret,
+		app:    s.app,
+		secret: s.cfg.Secret,
 	})
 
 	go func() {
@@ -76,19 +76,19 @@ func (s *Server) Start(ctx context.Context) error {
 
 type ingestSvc struct {
 	pb.UnimplementedEventsServiceServer
-	app          ports.Enqueuer
-	sharedSecret string
+	app    ports.Enqueuer
+	secret string
 }
 
 func (s *ingestSvc) Ingest(ctx context.Context, req *pb.IngestRequest) (*pb.IngestResponse, error) {
-	if s.sharedSecret != "" {
+	if s.secret != "" {
 		md, _ := metadata.FromIncomingContext(ctx)
 		auth := ""
 		if vals := md.Get("authorization"); len(vals) > 0 {
 			auth = vals[0]
 		}
 		const pfx = "Bearer "
-		if !strings.HasPrefix(auth, pfx) || strings.TrimPrefix(auth, pfx) != s.sharedSecret {
+		if !strings.HasPrefix(auth, pfx) || strings.TrimPrefix(auth, pfx) != s.secret {
 			return nil, fmt.Errorf("unauthorized")
 		}
 	}

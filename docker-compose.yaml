@@ -24,8 +24,8 @@ services:
       # gRPC TLS (опционально)
       # - MONIC_SERVER_TLS_CERT=/etc/monic/cert.pem
       # - MONIC_SERVER_TLS_KEY=/etc/monic/key.pem
-      - MONIC_SERVER_SHARED_SECRET=secret
       - MONIC_SERVER_CLICKHOUSE_DSN=tcp://clickhouse:9000?database=monic_db
+      - MONIC_SECRET=secret
     # gRPC TLS (опционально)
     # volumes:
     #   - ./certs/cert.pem:/etc/monic/cert.pem:ro

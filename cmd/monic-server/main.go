@@ -20,7 +20,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	verifier := auth.NewHMACVerifier(cfg.SharedSecret)
+	verifier := auth.NewHMACVerifier(cfg.Secret)
 	store, err := repo.NewClickHouse(ctx, cfg)
 	if err != nil {
 		panic(err)

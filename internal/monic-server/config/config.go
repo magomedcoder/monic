@@ -10,7 +10,7 @@ type Config struct {
 	GRPCAddr      string
 	TLSCertFile   string
 	TLSKeyFile    string
-	SharedSecret  string
+	Secret        string
 	ClickHouseDSN string
 	BatchSize     int
 	BatchWindowMs int
@@ -22,7 +22,7 @@ func Load() Config {
 		GRPCAddr:      pkg.GetEnv("MONIC_SERVER_GRPC_ADDR", ""),
 		TLSCertFile:   pkg.GetEnv("MONIC_SERVER_TLS_CERT", ""),
 		TLSKeyFile:    pkg.GetEnv("MONIC_SERVER_TLS_KEY", ""),
-		SharedSecret:  os.Getenv("MONIC_SERVER_SHARED_SECRET"),
+		Secret:        os.Getenv("MONIC_SECRET"),
 		ClickHouseDSN: pkg.GetEnv("MONIC_SERVER_CLICKHOUSE_DSN", "tcp://127.0.0.1:9000?database=monic_db"),
 		BatchSize:     pkg.MustInt(pkg.GetEnv("MONIC_SERVER_BATCH_SIZE", "500"), 500),
 		BatchWindowMs: pkg.MustInt(pkg.GetEnv("MONIC_SERVER_BATCH_WINDOW_MS", "500"), 500),

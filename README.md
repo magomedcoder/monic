@@ -29,13 +29,45 @@ Monic состоит из двух частей: **Agent** и **Server**
 
 ---
 
-### Запуск сервера в Docker
+##### ВАЖНО: перед запуском измените секрет и включите нужный режим в файлах monic-agent.service и monic-server.service
+
+---
+
+### Запуск сервера
+
+#### Вариант 1: На хосте через systemd
+
+#### Установка ClickHouse
+
+```bash
+# Следуйте официальной документации:
+# https://clickhouse.com/docs/install/debian_ubuntu
+
+# После установки ClickHouse, запустите клиент и создайте базу данных:
+clickhouse-client --query "CREATE DATABASE monic_db;" --user **** --password ****
+```
+
+```bash
+sudo cp /init/monic-server.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable monic-server
+sudo systemctl start monic-server
+```
+
+#### Проверить работу
+
+```bash
+sudo systemctl status monic-server
+sudo journalctl -u monic-server -f
+```
+
+#### Вариант 2: Docker
 
 ```bash
 docker compose up -d
 ```
 
-### Проверить работу
+#### Проверить работу
 
 ```bash
 docker compose logs -f monic-server
@@ -49,7 +81,7 @@ docker compose logs -f monic-server
 - `MONIC_SERVER_GRPC_ADDR` - адрес gRPC-сервера, по умолчанию пусто (gRPC выключен). Пример: `:50051`.
 - `MONIC_SERVER_TLS_CERT` - путь к `cert.pem` для gRPC TLS (опционально).
 - `MONIC_SERVER_TLS_KEY` - путь к `key.pem` для gRPC TLS (опционально).
-- `MONIC_SERVER_SHARED_SECRET` - общий секрет:
+- `MONIC_SECRET` - секрет:
     - HTTP: используется для HMAC (заголовок `X-Signature: sha256=<hex>`).
     - gRPC: используется как Bearer-токен в metadata `authorization: Bearer <secret>`.
 - `MONIC_SERVER_CLICKHOUSE_DSN` - DSN для подключения к ClickHouse, по
@@ -57,40 +89,27 @@ docker compose logs -f monic-server
 - `MONIC_SERVER_BATCH_SIZE` - размер батча перед вставкой, по умолчанию `500`
 - `MONIC_SERVER_BATCH_WINDOW_MS` - окно времени в мс перед отправкой батча, по умолчанию `500`
 
-### Запуск (HTTP)
-
-```bash
-MONIC_SERVER_HTTP_ADDR=:8000 \
-MONIC_SERVER_CLICKHOUSE_DSN="tcp://127.0.0.1:9000?database=monic_db&username=default&password=default" \
-MONIC_SERVER_SHARED_SECRET=secret \
-monic-server
-```
-
-### Запуск (gRPC, без TLS)
-
-```bash
-MONIC_SERVER_GRPC_ADDR=:50051 \
-MONIC_SERVER_CLICKHOUSE_DSN="tcp://127.0.0.1:9000?database=monic_db" \
-MONIC_SERVER_SHARED_SECRET=secret \
-monic-server
-```
-
-### Запуск (gRPC, с TLS)
-
-```bash
-MONIC_SERVER_GRPC_ADDR=:50051 \
-MONIC_SERVER_TLS_CERT=/etc/monic/cert.pem \
-MONIC_SERVER_TLS_KEY=/etc/monic/key.pem \
-MONIC_SERVER_CLICKHOUSE_DSN="tcp://127.0.0.1:9000?database=monic_db" \
-MONIC_SERVER_SHARED_SECRET=secret \
-monic-server
-```
-
 Можно одновременно задать и `MONIC_SERVER_HTTP_ADDR`, и `MONIC_SERVER_GRPC_ADDR` - сервер запустит оба протокола.
 
 ---
 
 # Агент
+
+### Запуск агента
+
+```bash
+sudo cp /init/monic-agent.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable monic-agent
+sudo systemctl start monic-agent
+```
+
+#### Проверить работу
+
+```bash
+sudo systemctl status monic-agent
+sudo journalctl -u monic-agent -f
+```
 
 ### Переменные окружения
 
@@ -102,7 +121,7 @@ monic-server
     - `MONIC_GRPC_INSECURE` - `true` для нешифрованного gRPC, по умолчанию `false`
 
 - **Общие параметры:**
-    - `MONIC_SHARED_SECRET` - общий секрет:
+    - `MONIC_SECRET` - секрет:
         - в HTTP режиме используется для HMAC (`X-Signature`)
         - в gRPC режиме используется как Bearer-токен (`authorization: Bearer <secret>`)
 
@@ -119,32 +138,6 @@ monic-server
                 - `MONIC_SNIFFER_PROMISC` - `true` для promiscuous, по умолчанию `false`
                 - `MONIC_SNIFFER_BPF` - кастомный BPF-фильтр.
                   По умолчанию: `(tcp[tcpflags] & (tcp-syn) != 0 and (tcp[tcpflags] & tcp-ack) = 0) or udp`
-
-### Запуск (HTTP)
-
-```bash
-sudo MONIC_HTTP_URL=http://127.0.0.1:8000 \
-MONIC_SHARED_SECRET=secret \
-monic-agent
-```
-
-### Запуск (gRPC, без TLS)
-
-```bash
-sudo MONIC_GRPC_ADDR=127.0.0.1:50051 \
-MONIC_GRPC_INSECURE=true \
-MONIC_SHARED_SECRET=secret \
-monic-agent
-```
-
-### Запуск (gRPC, с TLS)
-
-```bash
-sudo MONIC_GRPC_ADDR=127.0.0.1:50051 \
-MONIC_GRPC_INSECURE=false \
-MONIC_SHARED_SECRET=secret \
-monic-agent
-```
 
 ---
 
@@ -197,10 +190,10 @@ sudo MONIC_SNIFFER_IFACES=ens160,ens192 \
 
 - **go** 1.24
 - **make**
-- Для агента: `libsystemd-dev` и `pkg-config`
+- Для агента: `pkg-config`, `libsystemd-dev`, `libpcap-dev`
 
-> **protoc**, **protoc-gen-go** и **protoc-gen-go-grpc** нужны только в том случае,  
-> если вы хотите **перегенерировать gRPC/protobuf код** из `.proto` файлов.
+> **protoc**, **protoc-gen-go** и **protoc-gen-go-grpc** требуются только для
+> **генерации gRPC/protobuf кода** из **.proto** файлов.
 > - **protoc** 3.20
 > - **protoc-gen-go** 1.36
 > - **protoc-gen-go-grpc** 1.5
@@ -208,27 +201,9 @@ sudo MONIC_SNIFFER_IFACES=ens160,ens192 \
 ```bash
 sudo apt install pkg-config libsystemd-dev libpcap-dev make
 
-pkg-config --cflags --libs libsystemd
+pkg-config --cflags --libs libsystemd, libpcap
 ```
 
 ```bash
 make build
-```
-
----
-
-### Формат события
-
-```json
-{
-  "dateTime": "2025-09-22T10:20:30Z",
-  "server": "host01",
-  "type": "ssh_accepted|ssh_failed|ssh_invalid_user|ssh_disconnect",
-  "user": "root",
-  "remoteIp": "1.2.3.4",
-  "port": "22",
-  "method": "publickey|password|...",
-  "message": "accepted|failed|invalid_user|disconnected|connection_closed",
-  "raw": "<исходная строка journald>"
-}
 ```

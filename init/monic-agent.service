@@ -7,8 +7,6 @@ Wants=network-online.target
 User=root
 Group=root
 ExecStart=/usr/local/bin/monic-agent
-Environment=MONIC_JOURNAL_UNIT=sshd.service
-Environment=MONIC_SHARED_SECRET=secret
 Restart=on-failure
 RestartSec=5s
 StateDirectory=monic-agent
@@ -18,7 +16,11 @@ Environment=MONIC_HTTP_URL=http://127.0.0.1:8000
 
 # gRPC режим (приоритетнее, если указан MONIC_GRPC_ADDR)
 #Environment=MONIC_GRPC_ADDR=127.0.0.1:50051
-#Environment=MONIC_GRPC_INSECURE=true # true = без TLS
+# true = без TLS
+#Environment=MONIC_GRPC_INSECURE=true
+
+# Секрет: используется для проверки HMAC (HTTP) и как Bearer-токен (gRPC)
+Environment=MONIC_SECRET=secret
 
 # Детектор порт-скана
 # Включение/выключение (по умолчанию false)
@@ -28,13 +30,16 @@ Environment=MONIC_HTTP_URL=http://127.0.0.1:8000
 # Порог уникальных портов (по умолчанию 12)
 #Environment=MONIC_PORTSCAN_DISTINCT_PORTS=12
 
-# Сниффинг трафика (альтернатива firewall/journal)
+# Сниффинг трафика
 # Интерфейсы для захвата (через запятую)
 #Environment=MONIC_SNIFFER_IFACES=ens160,ens192
 # Включить promiscuous режим (по умолчанию false)
 #Environment=MONIC_SNIFFER_PROMISC=true
 # Кастомный BPF-фильтр (по умолчанию: tcp syn без ack или udp)
 #Environment=MONIC_SNIFFER_BPF=(tcp[tcpflags] & (tcp-syn) != 0 and (tcp[tcpflags] & tcp-ack) = 0) or udp
+
+# Опционально: можно вынести все переменные в /etc/default/monic-agent (формат KEY=VALUE)
+#EnvironmentFile=-/etc/default/monic-agent
 
 [Install]
 WantedBy=multi-user.target

@@ -15,8 +15,8 @@ Environment=MONIC_SERVER_HTTP_ADDR=:8000
 # gRPC-сервер
 #Environment=MONIC_SERVER_GRPC_ADDR=:50051
 
-# Общий секрет: используется для проверки HMAC (HTTP) и как Bearer-токен (gRPC)
-Environment=MONIC_SERVER_SHARED_SECRET=change_me
+# Секрет: используется для проверки HMAC (HTTP) и как Bearer-токен (gRPC)
+Environment=MONIC_SECRET=secret
 
 # gRPC TLS (опционально)
 #Environment=MONIC_SERVER_TLS_CERT=/etc/monic-server/cert.pem

@@ -32,13 +32,13 @@ func main() {
 
 	var senderIface ports.EventSender
 	if cfg.GRPCAddress != "" {
-		senderIface, err = grpcSender.NewGRPCSender(cfg.GRPCAddress, cfg.SharedSecret, cfg.GRPCInsecure)
+		senderIface, err = grpcSender.NewGRPCSender(cfg.GRPCAddress, cfg.Secret, cfg.GRPCInsecure)
 		if err != nil {
 			log.Fatalf("grpc sender: %v", err)
 		}
 		log.Printf("[Monic] gRPC -> %s (insecure=%v)", cfg.GRPCAddress, cfg.GRPCInsecure)
 	} else {
-		senderIface = httpInfra.NewHTTPSender(cfg.WebhookURL, cfg.SharedSecret)
+		senderIface = httpInfra.NewHTTPSender(cfg.WebhookURL, cfg.Secret)
 		log.Printf("[Monic] HTTP webhook -> %s", cfg.WebhookURL)
 	}
 
